@@ -1,9 +1,9 @@
 pipeline {
     agent any
-
+    
     tools {
         maven 'maven'
-    }
+    }    
 
     stages {
         stage('git-checkout') {
@@ -11,9 +11,23 @@ pipeline {
                checkout changelog: false, poll: false, scm: scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Technicalnikhi/spring-boot-war-example.git']])
             }
         }
+        stage('Run Tests') {
+            parallel {
+                stage('Sonar-scan') {
+                    steps {
+                        echo "sonar scan success"
+                    }    
+                }
+                stage('unit-test') {
+                    steps {
+                        echo "running unit test"
+                    }
+                }
+            }
+        }
         stage('building-source-code') {
             steps {
-                sh 'mvn clean package'
+                  sh 'mvn clean package'
             }
         }
         stage('deploy-to-tomcat') {
@@ -21,4 +35,5 @@ pipeline {
                 deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://13.212.8.160:8080')], contextPath: '/app', war: '**/*.war'
             }
         }
-                                                                                                                        
+    }
+}
