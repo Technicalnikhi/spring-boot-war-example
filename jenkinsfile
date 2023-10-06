@@ -1,40 +1,23 @@
 pipeline {
-    agent {
-        label 'java'
-    }
-    
+    agent any
     tools {
-        maven 'M2_HOME'
-    }
+        maven 'maven'
+    }    
 
     stages {
         stage('git-checkout') {
             steps {
-                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/sudhakarbastawade2303/spring-boot-war-example.git']])
+               checkout changelog: false, poll: false, scm: scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Technicalnikhi/spring-boot-war-example.git']])
             }
-        }
-        stage('Run Tests') {
-            parallel {
-                stage('sonar-scan') {
-                    steps {
-                        echo "sonar-scan-done"
-                    }    
-                }
-                stage('unit-test') {
-                    steps {
-                        echo "running unit test"
-                    }
-                }
-            }           
         }
         stage('building-source-code') {
             steps {
-                  sh 'mvn clean package'
+                sh 'mvn clean package'
             }
         }
         stage('deploy-to-tomcat') {
             steps {
-                deploy adapters: [tomcat9(credentialsId: 'tomcat9', path: '', url: 'http://44.211.150.240:8080')], contextPath: '/app', war: '**/*.war'
+                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://13.212.8.160:8080')], contextPath: '/app', onFailure: false, war: '**/*.war'
             }
         }
     }
