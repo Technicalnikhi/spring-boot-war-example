@@ -1,0 +1,24 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'maven'
+    }
+
+    stages {
+        stage('git-checkout') {
+            steps {
+               checkout changelog: false, poll: false, scm: scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Technicalnikhi/spring-boot-war-example.git']])
+            }
+        }
+        stage('building-source-code') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('deploy-to-tomcat') {
+            steps {
+                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://13.212.8.160:8080')], contextPath: '/app', war: '**/*.war'
+            }
+        }
+                                                                                                                        
