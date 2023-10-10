@@ -1,6 +1,8 @@
 pipeline {
     agent any
-    
+       label 'java'
+    }
+
     tools {
         maven 'maven'
     }    
@@ -11,28 +13,19 @@ pipeline {
                checkout changelog: false, poll: false, scm: scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Technicalnikhi/spring-boot-war-example.git']])
             }
         }
-        stage('Run Tests') {
-            parallel {
-                stage('Sonar-scan') {
-                    steps {
-                        echo "sonar scan success"
-                    }    
-                }
-                stage('unit-test') {
-                    steps {
-                        echo "running unit test"
-                    }
-                }
+            stage('Static Code Analysis') {
+          environment {
+                SONAR_URL = "http://18.143.73.159:9000 "
+                  }
+          steps {
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_AUTH_TOKEN')]) {
+                sh 'mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
             }
-        }
-        stage('building-source-code') {
+          }
+        }        
+     stage('building-source-code') {
             steps {
                   sh 'mvn clean package'
-            }
-        }
-        stage('deploy-to-tomcat') {
-            steps {
-                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://13.212.8.160:8080')], contextPath: '/app', war: '**/*.war'
             }
         }
     }
